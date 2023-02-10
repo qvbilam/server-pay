@@ -1,0 +1,39 @@
+syntax = "proto3";
+package userPb.v1;
+import "google/protobuf/empty.proto";
+option go_package="pay/api/qvbilam/pay/v1;payV1";
+
+message CreateGoodsRequest {
+  string type = 1;
+  int64 id = 2;
+  string name = 3;
+  string icon = 4;
+  float price = 5;
+  int64 count = 6;
+}
+
+message CreateOrderRequest{
+  int64 userId = 1;
+  int64 delivery_id = 2;
+  string pay_type = 3;
+  float amount = 4;
+  string remark = 5;
+  repeated CreateGoodsRequest goods = 6;
+}
+
+message UpdateOrderRequest{
+  int64 id = 1;
+  string orderSn = 2;
+  string tradeNo = 3;
+  int64 deliveryId = 4;
+  string status = 5;
+  float payAmount = 6;
+  string remark = 7;
+  string payResult = 8;
+  int64 payTime = 9;
+}
+
+service pay {
+  rpc CreateAliPayWebOrder (CreateOrderRequest) returns (google.protobuf.Empty);
+  rpc CreateAliPayAppOrder (CreateOrderRequest) returns (google.protobuf.Empty);
+}
