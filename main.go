@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"net"
 	"os"
+	"pay/api"
+	proto "pay/api/qvbilam/pay/v1"
 	"pay/global"
 	"pay/initialize"
 	"pay/utils"
@@ -19,8 +22,8 @@ func main() {
 	initialize.InitServer()
 
 	// 注册服务
-	//server := grpc.NewServer()
-	//proto.RegisterMessageServer(server, &api.MessageServer{})
+	server := grpc.NewServer()
+	proto.RegisterPayServer(server, &api.PayServer{})
 
 	Host := "0.0.0.0"
 	Port, _ := utils.GetFreePort()

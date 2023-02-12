@@ -11,17 +11,10 @@ function proto {
   protoc -I="$PROTO_PATH" --go_out "$OUT_PATH" --go_opt paths=source_relative --go-grpc_out "$OUT_PATH" --go-grpc_opt=paths=source_relative "$PROTO_FILE" --proto_path="$SCRIPT_DIR"
 }
 
-# 分页服务
+
 proto page page v1
-# 用户服务
 proto user user v1
+proto pay order v1
 
-# 联系人
-proto contact friend v1
-proto contact group v1
-proto contact conversation v1
-
-# 消息服务
-proto message message v1
 
 
