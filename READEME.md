@@ -23,6 +23,7 @@ go get -u github.com/anaskhan96/go-password-encoder
 go get -u github.com/spf13/viper
 
 # rocketmq
+go get github.com/apache/rocketmq-client-go/v2
 
 # 表单解析器
 go get -u github.com/thinkeridea/go-extend/exnet

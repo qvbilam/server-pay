@@ -1,8 +1,12 @@
 package initialize
 
 import (
+	"fmt"
 	retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	userProto "pay/api/qvbilam/user/v1"
 	"pay/global"
 	"time"
 )
@@ -47,4 +51,17 @@ func clientOption() []retry.CallOption {
 }
 
 func (s *serverClientConfig) initUserServer() {
+	opts := clientOption()
+
+	conn, err := grpc.Dial(
+		fmt.Sprintf("%s:%d", s.userDialConfig.host, s.userDialConfig.port),
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(retry.UnaryClientInterceptor(opts...)))
+	if err != nil {
+		zap.S().Fatalf("%s dial error: %s", s.userDialConfig.name, err)
+	}
+
+	userClient := userProto.NewUserClient(conn)
+
+	global.UserServerClient = userClient
 }

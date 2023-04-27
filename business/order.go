@@ -1,8 +1,10 @@
 package business
 
 import (
+	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 	"pay/enum"
 	"pay/global"
 	"pay/model"
@@ -117,23 +119,44 @@ func (b *OrderBusiness) Create() (*model.Order, error) {
 }
 
 func (b *OrderBusiness) Update() error {
+	// todo 通过save 修改订单
 	tx := global.DB.Begin()
-	updataData := make(map[string]interface{})
-	updataData["trade_no"] = b.TradeNo
-	updataData["status"] = b.Status
-	updataData["pay_result"] = b.PayResult
-	updataData["pay_amount"] = b.PayAmount
+	data := make(map[string]interface{})
+	data["trade_no"] = b.TradeNo
+	data["status"] = b.Status
+	data["pay_result"] = b.PayResult
+	data["pay_amount"] = b.PayAmount
 	if b.PayTime != 0 {
-		updataData["pay_time"] = time.Unix(b.PayTime, 0)
+		data["pay_time"] = time.Unix(b.PayTime, 0)
 	}
 
+	// 订单状态
 	if res := tx.Model(&model.Order{}).Where(&model.Order{
 		OrderSn: b.OrderSn,
-	}).Updates(updataData); res.RowsAffected == 0 {
+	}).Updates(data); res.RowsAffected == 0 {
 		tx.Rollback()
 		return res.Error
 	}
 
+	// todo 更新商品
+
 	tx.Commit()
+	return nil
+}
+
+func (b *OrderBusiness) sendOrderGoods(tx *gorm.DB) error {
+	var OrderGoods []model.OrderGoods
+	tx.Model(model.OrderGoods{}).Where(model.OrderGoods{OrderId: b.ID}).Find(&OrderGoods)
+
+	for _, goods := range OrderGoods {
+		fmt.Printf("%+v\n", goods)
+		//global.UserServerClient.
+		//global.UserServerClient.LevelExp()
+	}
+
+	fmt.Println(1)
+	Transaction()
+	fmt.Println(2)
+
 	return nil
 }
