@@ -9,17 +9,16 @@ import (
 	"pay/global"
 	"pay/model"
 	"pay/utils"
-	"time"
 )
 
-//type orderGoods struct {
-//ID    int64
-//Type  string
-//Name  string
-//Icon  string
-//Price float64
-//Count int64
-//}
+type OrderGoods struct {
+	ID    int64
+	Type  string
+	Name  string
+	Icon  string
+	Price float64
+	Count int64
+}
 
 type OrderBusiness struct {
 	ID         int64
@@ -31,51 +30,18 @@ type OrderBusiness struct {
 	ClientType string
 	Status     string
 	Amount     float64
-	PayAmount  float64
+	PayAmount  *float64
 	Remark     string
 	PayResult  string
 	PayTime    int64
-
+	Ext        string
+	Subject    string
 	//// 商品信息
-	//goods []*orderGoods
+	Goods []*OrderGoods
 }
 
 func (b *OrderBusiness) Create() (*model.Order, error) {
 	tx := global.DB.Begin()
-
-	type g struct {
-		ID    int64
-		Type  string
-		Name  string
-		Icon  string
-		Price float64
-		Count int64
-	}
-	gs := []g{
-		{
-			ID:    1,
-			Type:  "exp",
-			Name:  "测试经验",
-			Icon:  "",
-			Price: 10,
-			Count: 1,
-		},
-		{
-			ID:    2,
-			Type:  "exp",
-			Name:  "测试经验",
-			Icon:  "",
-			Price: 10,
-			Count: 1,
-		},
-	}
-
-	// 价格
-	var amount float64
-	for _, item := range gs {
-		p := item.Price * float64(item.Count)
-		amount += p
-	}
 
 	// 创建订单
 	orderSn := utils.GenerateOrderSn(b.UserId)
@@ -87,9 +53,9 @@ func (b *OrderBusiness) Create() (*model.Order, error) {
 		DeliveryId: b.DeliveryId,
 		PayType:    b.PayType,
 		ClientType: b.ClientType,
-		Subject:    "购买商品",
+		Subject:    b.Subject,
 		Status:     enum.PayStatusWait,
-		Amount:     amount,
+		Amount:     b.Amount,
 		Remark:     b.Remark,
 	}
 	if res := tx.Save(&order); res.RowsAffected == 0 {
@@ -99,7 +65,7 @@ func (b *OrderBusiness) Create() (*model.Order, error) {
 
 	// 创建订单商品
 	var goods []model.OrderGoods
-	for _, item := range gs {
+	for _, item := range b.Goods {
 		goods = append(goods, model.OrderGoods{
 			OrderId:   order.ID,
 			GoodsId:   item.ID,
@@ -118,30 +84,45 @@ func (b *OrderBusiness) Create() (*model.Order, error) {
 	return &order, nil
 }
 
-func (b *OrderBusiness) Update() error {
-	// todo 通过save 修改订单
+func (b *OrderBusiness) Update() (*model.Order, error) {
 	tx := global.DB.Begin()
-	data := make(map[string]interface{})
-	data["trade_no"] = b.TradeNo
-	data["status"] = b.Status
-	data["pay_result"] = b.PayResult
-	data["pay_amount"] = b.PayAmount
-	if b.PayTime != 0 {
-		data["pay_time"] = time.Unix(b.PayTime, 0)
-	}
-
-	// 订单状态
-	if res := tx.Model(&model.Order{}).Where(&model.Order{
-		OrderSn: b.OrderSn,
-	}).Updates(data); res.RowsAffected == 0 {
+	entity := &model.Order{}
+	if res := global.DB.Where(&model.Order{OrderSn: b.OrderSn}).First(&entity); res.RowsAffected == 0 {
 		tx.Rollback()
-		return res.Error
+		return nil, status.Errorf(codes.NotFound, "订单不存在")
+	}
+	if b.UserId != 0 && b.UserId != entity.UserID {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Unauthenticated, "非法访问订单")
+	}
+	if b.PayType != "" {
+		entity.PayType = b.PayType
+	}
+	if b.ClientType != "" {
+		entity.ClientType = b.ClientType
+	}
+	if b.Status != "" {
+		entity.Status = b.Status
+	}
+	if b.PayAmount != nil {
+		entity.PayAmount = *b.PayAmount
+	}
+	if b.PayResult != "" {
+		entity.PayResult = b.PayResult
+	}
+	if b.TradeNo != "" {
+		entity.TradeNo = b.TradeNo
+	}
+	if b.PayTime != 0 {
+		entity.PayTime = b.PayTime
 	}
 
-	// todo 更新商品
-
+	if res := global.DB.Save(&entity); res.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "订单变更失败")
+	}
 	tx.Commit()
-	return nil
+	return entity, nil
 }
 
 func (b *OrderBusiness) sendOrderGoods(tx *gorm.DB) error {

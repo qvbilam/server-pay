@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 type Order struct {
 	IDModel
 	UserModel
@@ -9,15 +7,20 @@ type Order struct {
 	TradeNo    string `gorm:"type:varchar(100) NOT NULL DEFAULT '';comment:交易号;index"`
 	DeliveryId int64  `gorm:"type:int NOT NULL DEFAULT 0 comment '收货id';index"`
 	//Delivery   *Delivery
-	PayType    string     `gorm:"type:varchar(20) NOT NULL DEFAULT 'alipay';comment:支付方式:alipay,wechat"`
-	ClientType string     `gorm:"type:varchar(20) NOT NULL DEFAULT 'alipay';comment:客户端类型:web,Android,iOS"`
-	Status     string     `gorm:"type:varchar(20) NOT NULL DEFAULT 'WAIT';comment:WAIT(等待支付),SUCCESS(成功),CLOSED(关闭),FINISHED(交易结束)"`
-	Amount     float64    `gorm:"NOT NULL DEFAULT 0;comment:总金额"`
-	PayAmount  float64    `gorm:"NOT NULL DEFAULT 0;comment:支付金额"`
-	Subject    string     `gorm:"type:varchar(20) NOT NULL DEFAULT '';comment:主题"`
-	Remark     string     `gorm:"type:varchar(20) NOT NULL DEFAULT '';comment:备注"`
-	PayResult  string     `gorm:"type:varchar(2048) NOT NULL DEFAULT '';comment:支付结果"`
-	PayTime    *time.Time `gorm:"type:datetime;comment:支付时间"`
+	PayType          string  `gorm:"type:varchar(20) NOT NULL DEFAULT 'alipay';comment:支付方式:alipay,wechat"`
+	ClientType       string  `gorm:"type:varchar(20) NOT NULL DEFAULT 'alipay';comment:客户端类型:web,Android,iOS"`
+	Status           string  `gorm:"type:varchar(20) NOT NULL DEFAULT 'WAIT';comment:WAIT(等待支付),SUCCESS(成功),CLOSED(关闭),FINISHED(交易结束)"`
+	Amount           float64 `gorm:"type:decimal(16,2) NOT NULL DEFAULT 0;comment:总金额"`
+	PayAmount        float64 `gorm:"type:decimal(16,2) NOT NULL DEFAULT 0;comment:支付金额"`
+	Subject          string  `gorm:"type:varchar(20) NOT NULL DEFAULT '';comment:主题"`
+	Remark           string  `gorm:"type:varchar(20) NOT NULL DEFAULT '';comment:备注"`
+	PayResult        string  `gorm:"type:varchar(2048) NOT NULL DEFAULT '';comment:支付结果"`
+	PayTime          int64   `gorm:"type:int;comment:支付时间"`
+	FinishTime       int64   `gorm:"type:int not null default 0;comment:完成时间(通知成功)"`
+	NotifyCount      int64   `gorm:"type:int not null default 0;comment:通知次数"`
+	NotifyErrorCount string  `gorm:"type:int not null default 0;comment:通知失败次数"`
+	LastNotifyError  string  `gorm:"type:varchar(255) not null default '';comment:最后通知失败原因"`
+	Ext              string  `gorm:"type:varchar(255) not null default '';comment:拓展"`
 	DateModel
 }
 
