@@ -6,7 +6,7 @@ db:
   port: 3306
   user: "root"
   password: "root"
-  database: "qvbilam_pay"
+  database: "live-pay"
 # 缓存
 redis:
   host: "127.0.0.1"
